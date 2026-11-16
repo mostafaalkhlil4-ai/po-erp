@@ -1,0 +1,5 @@
+# Minimal Supabase CLI config so the Supabase <-> GitHub integration can find migrations.
+project_id = "po-erp"
+
+[db]
+major_version = 15
