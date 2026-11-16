@@ -66,3 +66,28 @@ export const linkAccountSchema = z.object({
   id: z.string().uuid(),                       // patient or doctor id
   user_id: z.string().uuid().or(z.literal("").transform(() => null)),
 });
+
+export const CASE_STATUSES = ["assessment","product_selection","quotation","approved","production","quality_control","fitting","delivered","follow_up","closed","cancelled"] as const;
+export const caseSchema = z.object({
+  patient_id: z.string().uuid(),
+  case_type: z.enum(["prosthetic", "orthotic", "rehabilitation"]),
+  priority: z.enum(["low", "normal", "high", "urgent"]),
+  responsible_doctor_id: z.string().uuid().or(z.literal("").transform(() => null)),
+});
+export const advanceSchema = z.object({
+  case_id: z.string().uuid(),
+  to: z.enum(CASE_STATUSES),
+  note: optionalText(1000),
+});
+export const assignSchema = z.object({ case_id: z.string().uuid(), technician_id: z.string().uuid() });
+export const unassignSchema = z.object({ id: z.string().uuid(), case_id: z.string().uuid() });
+export const measurementSchema = z.object({
+  case_id: z.string().uuid(),
+  label: z.string().trim().min(1).max(100),
+  value: z.coerce.number().finite().min(-100000).max(100000),
+  unit: z.enum(["mm", "cm", "kg", "deg"]),
+  side: z.enum(["left", "right", ""]).transform((v) => (v === "" ? null : v)),
+});
+export const techAssessmentSchema = z.object({
+  case_id: z.string().uuid(), patient_id: z.string().uuid(), findings: z.string().trim().min(1).max(10000),
+});

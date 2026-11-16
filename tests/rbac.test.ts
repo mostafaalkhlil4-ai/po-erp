@@ -137,3 +137,27 @@ describe("portal link schema", () => {
   });
   it("rejects non-uuid", () => { expect(linkAccountSchema.safeParse({ id: u, user_id: "abc" }).success).toBe(false); });
 });
+
+import { caseSchema, advanceSchema, measurementSchema, assignSchema } from "@/lib/schemas";
+describe("case schemas and routes", () => {
+  const u = "3f2b8c1e-5d4a-4e6b-9a7c-1d2e3f4a5b6c";
+  it("case: valid, optional doctor, bad type", () => {
+    expect(caseSchema.parse({ patient_id: u, case_type: "orthotic", priority: "high", responsible_doctor_id: "" }).responsible_doctor_id).toBeNull();
+    expect(caseSchema.safeParse({ patient_id: u, case_type: "magic", priority: "high", responsible_doctor_id: "" }).success).toBe(false);
+    expect(caseSchema.safeParse({ patient_id: u, case_type: "orthotic", priority: "asap", responsible_doctor_id: "" }).success).toBe(false);
+  });
+  it("advance only accepts known statuses", () => {
+    expect(advanceSchema.safeParse({ case_id: u, to: "production", note: "" }).success).toBe(true);
+    expect(advanceSchema.safeParse({ case_id: u, to: "teleport", note: "" }).success).toBe(false);
+  });
+  it("measurement coerces numbers and rejects bad unit/value", () => {
+    expect(measurementSchema.parse({ case_id: u, label: "L", value: "52.5", unit: "cm", side: "" }).value).toBe(52.5);
+    expect(measurementSchema.safeParse({ case_id: u, label: "L", value: "abc", unit: "cm", side: "" }).success).toBe(false);
+    expect(measurementSchema.safeParse({ case_id: u, label: "L", value: "1", unit: "miles", side: "" }).success).toBe(false);
+    expect(assignSchema.safeParse({ case_id: u, technician_id: "x" }).success).toBe(false);
+  });
+  it("technician area: technician+admin; cases area: admin+management", () => {
+    expect(ROLES.filter((r) => canAccessPath(r, "/technician/cases/x"))).toEqual(["admin", "technician"]);
+    expect(ROLES.filter((r) => canAccessPath(r, "/management/cases"))).toEqual(["admin", "management"]);
+  });
+});
