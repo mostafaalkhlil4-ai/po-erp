@@ -37,7 +37,7 @@ export default async function Dashboard() {
           {(profile.role === "admin" || profile.role === "management") && <p><a className="btn" href="/management/patients">{t(locale, "patients")}</a> <a className="btn" href="/management/doctors">{t(locale, "doctors")}</a> <a className="btn" href="/management/cases">{t(locale, "cases")}</a></p>}
           {profile.role === "technician" && <p><a className="btn" href="/technician">{t(locale, "myCases")}</a></p>}
           {(profile.role === "doctor" || profile.role === "admin") && <p><a className="btn" href="/doctor">{t(locale, "myPatients")}</a></p>}
-          {profile.role === "patient" && <p><a className="btn" href="/patient">{t(locale, "myReports")}</a></p>}
+          {profile.role === "patient" && <p><a className="btn" href="/patient">{t(locale, "myCases")}</a></p>}
           {profile.role === "admin" && <p><a className="btn" href="/admin/users">{t(locale, "manageUsers")}</a></p>}
           <h2>{t(locale, "permissions")}</h2>
           <ul className="perms">{(perms ?? []).map((p) => <li key={p.permission_code} dir="ltr">{p.permission_code}</li>)}</ul>

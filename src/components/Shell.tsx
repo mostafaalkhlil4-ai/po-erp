@@ -16,9 +16,10 @@ export function Shell({ locale, role, children }: { locale: Locale; role?: AppRo
           {staff && <a href="/management/patients">{t(locale, "patients")}</a>}
           {staff && <a href="/management/doctors">{t(locale, "doctors")}</a>}
           {staff && <a href="/management/cases">{t(locale, "cases")}</a>}
+          {staff && <a href="/management/appointments">{t(locale, "appointments")}</a>}
           {(role === "technician" || role === "admin") && <a href="/technician">{t(locale, "myCases")}</a>}
           {(role === "doctor" || role === "admin") && <a href="/doctor">{t(locale, "myPatients")}</a>}
-          {(role === "patient") && <a href="/patient">{t(locale, "myReports")}</a>}
+          {(role === "patient") && <a href="/patient">{t(locale, "myCases")}</a>}
         </nav>
         <span style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
           <LocaleSwitch locale={locale} />

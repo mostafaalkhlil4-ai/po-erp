@@ -161,3 +161,18 @@ describe("case schemas and routes", () => {
     expect(ROLES.filter((r) => canAccessPath(r, "/management/cases"))).toEqual(["admin", "management"]);
   });
 });
+
+import { appointmentSchema, appointmentStatusSchema } from "@/lib/schemas";
+describe("appointment schemas", () => {
+  const u = "3f2b8c1e-5d4a-4e6b-9a7c-1d2e3f4a5b6c";
+  it("normalizes datetime to ISO, optional case/notes", () => {
+    const r = appointmentSchema.parse({ patient_id: u, case_id: "", appointment_type: "fitting", scheduled_at: "2026-12-01T10:30", notes: "" });
+    expect(r.case_id).toBeNull(); expect(r.notes).toBeNull(); expect(r.scheduled_at).toMatch(/^2026-12-01T/);
+  });
+  it("rejects bad date/type; status cannot go back to scheduled", () => {
+    expect(appointmentSchema.safeParse({ patient_id: u, case_id: "", appointment_type: "fitting", scheduled_at: "soon", notes: "" }).success).toBe(false);
+    expect(appointmentSchema.safeParse({ patient_id: u, case_id: "", appointment_type: "party", scheduled_at: "2026-12-01T10:30", notes: "" }).success).toBe(false);
+    expect(appointmentStatusSchema.safeParse({ id: u, status: "scheduled" }).success).toBe(false);
+    expect(appointmentStatusSchema.safeParse({ id: u, status: "completed" }).success).toBe(true);
+  });
+});

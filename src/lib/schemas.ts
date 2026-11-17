@@ -91,3 +91,15 @@ export const measurementSchema = z.object({
 export const techAssessmentSchema = z.object({
   case_id: z.string().uuid(), patient_id: z.string().uuid(), findings: z.string().trim().min(1).max(10000),
 });
+
+export const appointmentSchema = z.object({
+  patient_id: z.string().uuid(),
+  case_id: z.string().uuid().or(z.literal("").transform(() => null)),
+  appointment_type: z.enum(["assessment", "fitting", "follow_up", "consultation", "other"]),
+  scheduled_at: z.string().trim().refine((v) => !Number.isNaN(Date.parse(v))).transform((v) => new Date(v).toISOString()),
+  notes: optionalText(1000),
+});
+export const appointmentStatusSchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(["completed", "cancelled", "no_show"]),
+});
