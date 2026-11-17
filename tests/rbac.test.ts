@@ -176,3 +176,34 @@ describe("appointment schemas", () => {
     expect(appointmentStatusSchema.safeParse({ id: u, status: "completed" }).success).toBe(true);
   });
 });
+
+import { productSchema, priceSchema, quotationSchema, quotationItemSchema, discountSchema } from "@/lib/schemas";
+describe("catalog and quotation schemas", () => {
+  const u = "3f2b8c1e-5d4a-4e6b-9a7c-1d2e3f4a5b6c";
+  it("price: normalizes currency, rejects bad values", () => {
+    expect(priceSchema.parse({ product_id: u, price: "10.5", currency: " usd " }).currency).toBe("USD");
+    expect(priceSchema.safeParse({ product_id: u, price: "-1", currency: "USD" }).success).toBe(false);
+    expect(priceSchema.safeParse({ product_id: u, price: "1", currency: "US" }).success).toBe(false);
+    expect(priceSchema.safeParse({ product_id: u, price: "abc", currency: "USD" }).success).toBe(false);
+  });
+  it("product requires manufacturer, name and sku", () => {
+    expect(productSchema.safeParse({ manufacturer_id: u, category_id: "", name: "X", sku: "S", description: "" }).success).toBe(true);
+    expect(productSchema.safeParse({ manufacturer_id: u, category_id: "", name: "X", sku: " ", description: "" }).success).toBe(false);
+  });
+  it("quotation: tax in 0..100; no default currency", () => {
+    expect(quotationSchema.safeParse({ case_id: u, currency: "EUR", tax_rate: "15" }).success).toBe(true);
+    expect(quotationSchema.safeParse({ case_id: u, currency: "EUR", tax_rate: "101" }).success).toBe(false);
+    expect(quotationSchema.safeParse({ case_id: u, currency: "", tax_rate: "5" }).success).toBe(false);
+  });
+  it("items: product needs product id; service needs description and price", () => {
+    expect(quotationItemSchema.safeParse({ quotation_id: u, item_type: "product", product_id: u, description: "", quantity: "1", unit_price: "" }).success).toBe(true);
+    expect(quotationItemSchema.safeParse({ quotation_id: u, item_type: "product", product_id: "", description: "", quantity: "1", unit_price: "" }).success).toBe(false);
+    expect(quotationItemSchema.safeParse({ quotation_id: u, item_type: "service", product_id: "", description: "Fee", quantity: "1", unit_price: "5" }).success).toBe(true);
+    expect(quotationItemSchema.safeParse({ quotation_id: u, item_type: "service", product_id: "", description: "", quantity: "1", unit_price: "5" }).success).toBe(false);
+    expect(quotationItemSchema.safeParse({ quotation_id: u, item_type: "material", product_id: "", description: "M", quantity: "0", unit_price: "5" }).success).toBe(false);
+  });
+  it("discount in 0..100", () => {
+    expect(discountSchema.safeParse({ id: u, discount_percent: "10" }).success).toBe(true);
+    expect(discountSchema.safeParse({ id: u, discount_percent: "120" }).success).toBe(false);
+  });
+});

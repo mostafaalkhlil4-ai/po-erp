@@ -103,3 +103,34 @@ export const appointmentStatusSchema = z.object({
   id: z.string().uuid(),
   status: z.enum(["completed", "cancelled", "no_show"]),
 });
+
+const currency = z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/);
+const money = z.coerce.number().finite().min(0).max(999999999999);
+export const productSchema = z.object({
+  manufacturer_id: z.string().uuid(),
+  category_id: z.string().uuid().or(z.literal("").transform(() => null)),
+  name: z.string().trim().min(1).max(300),
+  sku: z.string().trim().min(1).max(100),
+  description: optionalText(2000),
+});
+export const categorySchema = z.object({ name: z.string().trim().min(1).max(200) });
+export const priceSchema = z.object({ product_id: z.string().uuid(), price: money, currency });
+export const quotationSchema = z.object({
+  case_id: z.string().uuid(), currency,
+  tax_rate: z.coerce.number().min(0).max(100),
+});
+export const quotationItemSchema = z.object({
+  quotation_id: z.string().uuid(),
+  item_type: z.enum(["product", "material", "service"]),
+  product_id: z.string().uuid().or(z.literal("").transform(() => null)),
+  description: z.string().trim().max(500),
+  quantity: z.coerce.number().gt(0).max(100000),
+  unit_price: z.union([money, z.literal("").transform(() => null)]),
+}).superRefine((v, ctx) => {
+  if (v.item_type === "product" && !v.product_id) ctx.addIssue({ code: "custom", path: ["product_id"], message: "required" });
+  if (v.item_type !== "product" && (v.unit_price === null || v.description === "")) ctx.addIssue({ code: "custom", path: ["unit_price"], message: "required" });
+});
+export const quotationIdSchema = z.object({ id: z.string().uuid() });
+export const discountSchema = z.object({ id: z.string().uuid(), discount_percent: z.coerce.number().min(0).max(100) });
+export const rejectSchema = z.object({ id: z.string().uuid(), reason: z.string().trim().min(1).max(1000) });
+export const removeItemSchema = z.object({ id: z.string().uuid(), quotation_id: z.string().uuid() });

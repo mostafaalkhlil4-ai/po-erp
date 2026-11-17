@@ -4,6 +4,7 @@ import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { Shell } from "@/components/Shell";
 import { advanceCase, assignTechnician, unassignTechnician } from "../actions";
+import { QuotationForm } from "../../quotations/QuotationForm";
 
 export default async function CaseDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -12,7 +13,7 @@ export default async function CaseDetail({ params }: { params: Promise<{ id: str
   const supabase = await createClient();
   const { data: c } = await supabase.from("cases").select("id,case_no,case_type,status,priority,patient_id,opened_at,closed_at").eq("id", id).maybeSingle();
   if (!c) notFound();
-  const [{ data: patient }, { data: next }, { data: asg }, { data: techs }, { data: events }, { data: meas }, { data: canWrite }] = await Promise.all([
+  const [{ data: patient }, { data: next }, { data: asg }, { data: techs }, { data: events }, { data: meas }, { data: canWrite }, { data: quotes }, { data: canQuote }] = await Promise.all([
     supabase.from("patients").select("full_name").eq("id", c.patient_id).maybeSingle(),
     supabase.from("case_transitions").select("to_status").eq("from_status", c.status).eq("actor_kind", "staff"),
     supabase.from("case_assignments").select("id,technician_id").eq("case_id", id).is("ended_at", null),
@@ -20,6 +21,8 @@ export default async function CaseDetail({ params }: { params: Promise<{ id: str
     supabase.from("case_events").select("id,event_type,from_status,to_status,note,created_at").eq("case_id", id).order("id"),
     supabase.from("measurements").select("id,label,value,unit,side,created_at").eq("case_id", id).order("created_at"),
     supabase.rpc("has_permission", { p_code: "cases.write" }),
+    supabase.from("quotations").select("id,quotation_no,revision,status,currency").eq("case_id", id).order("quotation_no"),
+    supabase.rpc("has_permission", { p_code: "quotations.manage" }),
   ]);
   const w = canWrite === true;
   // quotation -> approved is blocked by the database until the quotation module exists: do not offer a dead option.
@@ -40,7 +43,7 @@ export default async function CaseDetail({ params }: { params: Promise<{ id: str
             <input name="note" aria-label={t(locale, "notes")} placeholder={t(locale, "notes")} maxLength={1000} />
             <button type="submit">{t(locale, "moveTo")}</button>
           </form>)}
-        {c.status === "quotation" && <p><small>{t(locale, "approvalBlocked")}</small></p>}
+        {c.status === "quotation" && <p><small>{t(locale, "approvalViaQuotation")}</small></p>}
       </div>
       <div className="card" style={{ marginTop: "1rem" }}>
         <h2>{t(locale, "technicians")}</h2>
@@ -53,6 +56,14 @@ export default async function CaseDetail({ params }: { params: Promise<{ id: str
             <select name="technician_id" aria-label={t(locale, "technicians")}>{(techs ?? []).filter((x) => !assigned.has(x.id)).map((x) => <option key={x.id} value={x.id}>{x.full_name || x.email}</option>)}</select>
             <button type="submit">{t(locale, "assign")}</button></form>)}
       </div>
+      {canQuote === true && (
+        <div className="card" style={{ marginTop: "1rem" }}>
+          <h2>{t(locale, "quotations")}</h2>
+          <ul>{(quotes ?? []).map((x) => <li key={x.id}><a href={`/management/quotations/${x.id}`}>#{x.quotation_no} / {x.revision}</a> — {t(locale, `qs_${x.status}` as never)} ({x.currency})</li>)}</ul>
+          {["product_selection", "quotation"].includes(c.status) && (
+            <QuotationForm caseId={c.id} l={{ currency: t(locale, "currency"), taxRate: t(locale, "taxRate"), save: t(locale, "newQuotation"),
+              err_invalid: t(locale, "invalidInput"), err_forbidden: t(locale, "errForbidden"), err_failed: t(locale, "errFailed") }} />)}
+        </div>)}
       <div className="card" style={{ marginTop: "1rem" }}>
         <h2>{t(locale, "measurements")}</h2>
         <ul>{(meas ?? []).map((m) => <li key={m.id}>{m.label}: {m.value} {m.unit}{m.side ? ` (${m.side})` : ""}</li>)}</ul>
