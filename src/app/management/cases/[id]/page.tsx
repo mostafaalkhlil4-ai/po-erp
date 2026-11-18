@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { Shell } from "@/components/Shell";
+import { ProductionPanel } from "@/components/ProductionPanel";
 import { advanceCase, assignTechnician, unassignTechnician } from "../actions";
 import { QuotationForm } from "../../quotations/QuotationForm";
 
@@ -64,6 +65,7 @@ export default async function CaseDetail({ params }: { params: Promise<{ id: str
             <QuotationForm caseId={c.id} l={{ currency: t(locale, "currency"), taxRate: t(locale, "taxRate"), save: t(locale, "newQuotation"),
               err_invalid: t(locale, "invalidInput"), err_forbidden: t(locale, "errForbidden"), err_failed: t(locale, "errFailed") }} />)}
         </div>)}
+      <ProductionPanel locale={locale} caseId={c.id} caseStatus={c.status} />
       <div className="card" style={{ marginTop: "1rem" }}>
         <h2>{t(locale, "measurements")}</h2>
         <ul>{(meas ?? []).map((m) => <li key={m.id}>{m.label}: {m.value} {m.unit}{m.side ? ` (${m.side})` : ""}</li>)}</ul>

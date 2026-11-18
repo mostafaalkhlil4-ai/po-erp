@@ -94,6 +94,7 @@ create trigger quotations_created_by before insert on public.quotations for each
 
 create table public.quotation_items (
   id           uuid primary key default gen_random_uuid(),
+  seq          bigint generated always as identity,   -- stable insertion order (created_at ties inside one transaction)
   quotation_id uuid not null references public.quotations (id) on delete restrict,
   item_type    text not null check (item_type in ('product','material','service')),
   product_id   uuid references public.products (id) on delete restrict,
@@ -156,7 +157,7 @@ begin
            'quantity', i.quantity, 'unit_price', i.unit_price, 'line_total', i.line_total,
            'product', case when i.product_id is null then null else jsonb_build_object(
                'id', p.id, 'name', p.name, 'sku', p.sku, 'manufacturer', m.name) end
-         ) order by i.created_at, i.id), '[]'::jsonb)
+         ) order by i.seq), '[]'::jsonb)
     into v_items
     from public.quotation_items i
     left join public.products p on p.id = i.product_id
@@ -341,7 +342,7 @@ begin
   -- items are re-created, so product prices are refreshed to the current base price
   insert into public.quotation_items (quotation_id, item_type, product_id, description, quantity, unit_price)
     select v_new, item_type, product_id, description, quantity, unit_price
-      from public.quotation_items where quotation_id = p_q order by created_at, id;
+      from public.quotation_items where quotation_id = p_q order by seq;
   if v.status = 'submitted' then
     update public.quotations set status = 'superseded' where id = p_q;
   end if;

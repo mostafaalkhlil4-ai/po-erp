@@ -134,3 +134,8 @@ export const quotationIdSchema = z.object({ id: z.string().uuid() });
 export const discountSchema = z.object({ id: z.string().uuid(), discount_percent: z.coerce.number().min(0).max(100) });
 export const rejectSchema = z.object({ id: z.string().uuid(), reason: z.string().trim().min(1).max(1000) });
 export const removeItemSchema = z.object({ id: z.string().uuid(), quotation_id: z.string().uuid() });
+
+export const stageSchema = z.object({ case_id: z.string().uuid(), name: z.string().trim().min(1).max(100), position: z.coerce.number().int().min(0).max(1000) });
+export const stageStatusSchema = z.object({ id: z.string().uuid(), case_id: z.string().uuid(), to: z.enum(["in_progress", "completed"]), notes: z.string().trim().max(2000).transform((v) => (v === "" ? null : v)) });
+export const qcSchema = z.object({ case_id: z.string().uuid(), result: z.enum(["pass", "fail"]), notes: z.string().trim().max(2000).transform((v) => (v === "" ? null : v)) })
+  .refine((v) => v.result === "pass" || v.notes !== null, { path: ["notes"], message: "required" });

@@ -95,9 +95,15 @@ begin
     format('select public.advance_case(%L, %L)', c1, 'cancelled'), '42501');
   perform tests.expect_error('T55b technician cannot skip production -> fitting',
     format('select public.advance_case(%L, %L)', c1, 'fitting'), '42501');
+  -- Phase 5 gates (D-026): stages must be completed and a passing QC recorded
+  perform tests.logout();
+  insert into public.production_stages (case_id, name) values (c1, 'Fabrication');
+  update public.production_stages set status = 'completed', started_at = now(), completed_at = now() where case_id = c1;
+  perform tests.login(tech);
   perform public.advance_case(c1, 'quality_control');
   perform public.advance_case(c1, 'production', 'correction');
   perform public.advance_case(c1, 'quality_control');
+  insert into public.quality_checks (case_id, result) values (c1, 'pass');
   perform public.advance_case(c1, 'fitting');
   perform tests.eq('T55c technician moved case through production/QC/fitting', (select status from public.cases where id = c1), 'fitting');
   perform tests.expect_error('T55d technician cannot unassigned-case advance (case 2)',

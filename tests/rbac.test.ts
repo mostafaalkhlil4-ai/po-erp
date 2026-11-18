@@ -207,3 +207,22 @@ describe("catalog and quotation schemas", () => {
     expect(discountSchema.safeParse({ id: u, discount_percent: "120" }).success).toBe(false);
   });
 });
+
+import { stageSchema, stageStatusSchema, qcSchema } from "@/lib/schemas";
+describe("production schemas", () => {
+  const u = "3f2b8c1e-5d4a-4e6b-9a7c-1d2e3f4a5b6c";
+  it("stage needs a name; position is a non-negative integer", () => {
+    expect(stageSchema.safeParse({ case_id: u, name: "Casting", position: "1" }).success).toBe(true);
+    expect(stageSchema.safeParse({ case_id: u, name: " ", position: "1" }).success).toBe(false);
+    expect(stageSchema.safeParse({ case_id: u, name: "X", position: "-1" }).success).toBe(false);
+  });
+  it("stage status only allows forward moves", () => {
+    expect(stageStatusSchema.safeParse({ id: u, case_id: u, to: "completed", notes: "" }).success).toBe(true);
+    expect(stageStatusSchema.safeParse({ id: u, case_id: u, to: "pending", notes: "" }).success).toBe(false);
+  });
+  it("failed QC requires notes", () => {
+    expect(qcSchema.safeParse({ case_id: u, result: "pass", notes: "" }).success).toBe(true);
+    expect(qcSchema.safeParse({ case_id: u, result: "fail", notes: "" }).success).toBe(false);
+    expect(qcSchema.safeParse({ case_id: u, result: "fail", notes: "misaligned" }).success).toBe(true);
+  });
+});

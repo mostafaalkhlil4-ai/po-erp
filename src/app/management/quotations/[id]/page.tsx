@@ -15,7 +15,7 @@ export default async function QuotationPage({ params }: { params: Promise<{ id: 
     .select("id,quotation_no,case_id,revision,status,currency,tax_rate,discount_percent,rejection_reason,snapshot").eq("id", id).maybeSingle();
   if (!q) notFound(); // also the answer for roles without quotation access
   const [{ data: items }, { data: totals }, { data: prods }, { data: mf }, { data: canDiscount }, { data: canApprove }] = await Promise.all([
-    supabase.from("quotation_items").select("id,item_type,description,quantity,unit_price,line_total").eq("quotation_id", id).order("created_at"),
+    supabase.from("quotation_items").select("id,item_type,description,quantity,unit_price,line_total").eq("quotation_id", id).order("seq"),
     supabase.rpc("quotation_totals", { p_q: id }),
     supabase.from("products").select("id,name,sku,manufacturer_id").eq("is_active", true).order("name"),
     supabase.from("manufacturers").select("id,name"),
