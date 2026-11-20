@@ -42,6 +42,7 @@ export default async function QuotationPage({ params }: { params: Promise<{ id: 
         <p>{t(locale, "status")}: <strong>{t(locale, `qs_${q.status}` as never)}</strong> · {q.currency} · {t(locale, "taxRate")} {q.tax_rate}% · {t(locale, "discount")} {q.discount_percent}%</p>
         <p><a href={`/management/cases/${q.case_id}`}>{t(locale, "cases")}</a></p>
         {q.rejection_reason && <p role="status">{t(locale, "rejectionReason")}: {q.rejection_reason}</p>}
+        {q.status === "approved" && <p><a href={`/management/quotations/${q.id}/print`}>{t(locale, "printSave")}</a></p>}
         {q.status === "approved" && <p role="status">{t(locale, "snapshotFrozen")}{snap?.total != null ? ` — ${snap.total} ${q.currency}` : ""}</p>}
       </div>
       <div className="card" style={{ marginTop: "1rem" }}>
