@@ -267,3 +267,22 @@ describe("device, follow-up and attachment rules", () => {
     expect(attachmentMetaSchema.safeParse({ patient_id: u, case_id: "", category: "exe", visibility: "internal" }).success).toBe(false);
   });
 });
+
+import { itemSchema, movementSchema, poSchema, poItemSchema } from "@/lib/schemas";
+describe("inventory and procurement schemas", () => {
+  const u = "3f2b8c1e-5d4a-4e6b-9a7c-1d2e3f4a5b6c";
+  it("issue needs a case; adjustments need notes", () => {
+    expect(movementSchema.safeParse({ item_id: u, kind: "issue", quantity: "2", case_id: u, notes: "" }).success).toBe(true);
+    expect(movementSchema.safeParse({ item_id: u, kind: "issue", quantity: "2", case_id: "", notes: "" }).success).toBe(false);
+    expect(movementSchema.safeParse({ item_id: u, kind: "adjust_out", quantity: "1", case_id: "", notes: "" }).success).toBe(false);
+    expect(movementSchema.safeParse({ item_id: u, kind: "adjust_out", quantity: "1", case_id: "", notes: "count" }).success).toBe(true);
+    expect(movementSchema.safeParse({ item_id: u, kind: "receipt", quantity: "0", case_id: "", notes: "" }).success).toBe(false);
+  });
+  it("item and purchase order validation", () => {
+    expect(itemSchema.safeParse({ name: "A", sku: "S", unit: "pc", min_stock: "0" }).success).toBe(true);
+    expect(itemSchema.safeParse({ name: "A", sku: "", unit: "pc", min_stock: "0" }).success).toBe(false);
+    expect(poSchema.safeParse({ supplier_id: u, currency: "eur" }).success).toBe(true);
+    expect(poSchema.safeParse({ supplier_id: u, currency: "EU" }).success).toBe(false);
+    expect(poItemSchema.safeParse({ po_id: u, item_id: u, quantity: "1", unit_cost: "-1" }).success).toBe(false);
+  });
+});

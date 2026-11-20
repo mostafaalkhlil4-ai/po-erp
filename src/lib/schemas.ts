@@ -176,3 +176,17 @@ export function checkAttachmentFile(f: { type: string; size: number; name: strin
 
 export const referralSchema = z.object({ patient_id: z.string().uuid(), referring_doctor_id: z.string().uuid(), reason: z.string().trim().max(2000).transform((v) => (v === "" ? null : v)) });
 export const referralStatusSchema = z.object({ id: z.string().uuid(), status: z.enum(["received", "accepted", "rejected", "closed"]) });
+
+const qty = z.coerce.number().gt(0).max(10000000);
+export const itemSchema = z.object({ name: z.string().trim().min(1).max(200), sku: z.string().trim().min(1).max(100), unit: z.string().trim().min(1).max(30), min_stock: z.coerce.number().min(0).max(10000000) });
+export const movementSchema = z.object({
+  item_id: z.string().uuid(), kind: z.enum(["receipt", "issue", "adjust_in", "adjust_out"]), quantity: qty,
+  case_id: z.string().uuid().or(z.literal("").transform(() => null)), notes: z.string().trim().max(1000).transform((v) => (v === "" ? null : v)),
+}).superRefine((v, ctx) => {
+  if (v.kind === "issue" && !v.case_id) ctx.addIssue({ code: "custom", path: ["case_id"], message: "required" });
+  if ((v.kind === "adjust_in" || v.kind === "adjust_out") && !v.notes) ctx.addIssue({ code: "custom", path: ["notes"], message: "required" });
+});
+export const supplierSchema = z.object({ name: z.string().trim().min(1).max(200), contact: z.string().trim().max(500).transform((v) => (v === "" ? null : v)) });
+export const poSchema = z.object({ supplier_id: z.string().uuid(), currency: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/) });
+export const poItemSchema = z.object({ po_id: z.string().uuid(), item_id: z.string().uuid(), quantity: qty, unit_cost: z.coerce.number().min(0).max(999999999999) });
+export const poStatusSchema = z.object({ id: z.string().uuid(), to: z.enum(["ordered", "received", "cancelled"]) });

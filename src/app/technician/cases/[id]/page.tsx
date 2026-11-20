@@ -5,6 +5,7 @@ import { t } from "@/lib/i18n";
 import { Shell } from "@/components/Shell";
 import { ProductionPanel } from "@/components/ProductionPanel";
 import { CaseExtras } from "@/components/CaseExtras";
+import { MovementForm } from "@/app/management/inventory/Forms";
 import { addMeasurement, addTechAssessment, techAdvance } from "./actions";
 
 export default async function TechCase({ params }: { params: Promise<{ id: string }> }) {
@@ -14,11 +15,12 @@ export default async function TechCase({ params }: { params: Promise<{ id: strin
   const supabase = await createClient();
   const { data: c } = await supabase.from("cases").select("id,case_no,case_type,status,patient_id").eq("id", id).maybeSingle();
   if (!c) notFound();
-  const [{ data: p }, { data: meas }, { data: ass }, { data: next }] = await Promise.all([
+  const [{ data: p }, { data: meas }, { data: ass }, { data: next }, { data: stock }] = await Promise.all([
     supabase.from("patients").select("full_name").eq("id", c.patient_id).maybeSingle(),
     supabase.from("measurements").select("id,label,value,unit,side").eq("case_id", id).order("created_at"),
     supabase.from("assessments").select("id,findings,created_at").eq("case_id", id).eq("assessment_type", "technical").order("created_at", { ascending: false }),
     supabase.from("case_transitions").select("to_status").eq("from_status", c.status).eq("actor_kind", "technician"),
+    supabase.from("inventory_items").select("id,name,sku,unit").eq("is_active", true).order("name"),
   ]);
   const S = (s: string) => t(locale, `st_${s}` as never);
   const open = !["closed", "cancelled"].includes(c.status);
@@ -36,6 +38,11 @@ export default async function TechCase({ params }: { params: Promise<{ id: strin
       </div>
       <ProductionPanel locale={locale} caseId={c.id} caseStatus={c.status} />
       <CaseExtras locale={locale} caseId={c.id} patientId={c.patient_id} caseStatus={c.status} />
+      {open && (stock ?? []).length > 0 && <div className="card" style={{ marginTop: "1rem" }}><h2>{t(locale, "issueMaterial")}</h2>
+        <MovementForm caseId={c.id} kinds={["issue"]} items={(stock ?? []).map((i) => ({ id: i.id, label: `${i.name} (${i.sku}, ${i.unit})` }))}
+          l={{ item: t(locale, "item"), kind: t(locale, "kind"), quantity: t(locale, "quantity"), notes: t(locale, "notes"), mv_issue: t(locale, "mv_issue"),
+            save: t(locale, "save"), saved: t(locale, "saved"), err_invalid: t(locale, "invalidInput"), err_forbidden: t(locale, "errForbidden"),
+            err_stock: t(locale, "errStockRule"), err_failed: t(locale, "errFailed"), err_duplicate: t(locale, "errFailed"), caseFor: "" }} /></div>}
       <div className="card" style={{ marginTop: "1rem" }}>
         <h2>{t(locale, "measurements")}</h2>
         <ul>{(meas ?? []).map((m) => <li key={m.id}>{m.label}: {m.value} {m.unit}{m.side ? ` (${m.side})` : ""}</li>)}</ul>
