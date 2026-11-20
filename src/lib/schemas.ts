@@ -139,3 +139,15 @@ export const stageSchema = z.object({ case_id: z.string().uuid(), name: z.string
 export const stageStatusSchema = z.object({ id: z.string().uuid(), case_id: z.string().uuid(), to: z.enum(["in_progress", "completed"]), notes: z.string().trim().max(2000).transform((v) => (v === "" ? null : v)) });
 export const qcSchema = z.object({ case_id: z.string().uuid(), result: z.enum(["pass", "fail"]), notes: z.string().trim().max(2000).transform((v) => (v === "" ? null : v)) })
   .refine((v) => v.result === "pass" || v.notes !== null, { path: ["notes"], message: "required" });
+
+export const paymentSchema = z.object({
+  invoice_id: z.string().uuid(), amount: z.coerce.number().gt(0).max(999999999999),
+  method: z.enum(["cash", "bank_transfer", "card", "other"]),
+  reference: z.string().trim().max(200).transform((v) => (v === "" ? null : v)),
+});
+export const expenseSchema = z.object({
+  category: z.string().trim().min(1).max(100), description: z.string().trim().max(1000).transform((v) => (v === "" ? null : v)),
+  amount: z.coerce.number().gt(0).max(999999999999), currency: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/),
+  incurred_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+export const voidInvoiceSchema = z.object({ id: z.string().uuid(), reason: z.string().trim().min(1).max(1000) });

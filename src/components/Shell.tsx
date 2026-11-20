@@ -17,6 +17,7 @@ export function Shell({ locale, role, children }: { locale: Locale; role?: AppRo
           {staff && <a href="/management/doctors">{t(locale, "doctors")}</a>}
           {staff && <a href="/management/cases">{t(locale, "cases")}</a>}
           {staff && <a href="/management/catalog">{t(locale, "catalog")}</a>}
+          {staff && <a href="/management/finance">{t(locale, "finance")}</a>}
           {staff && <a href="/management/appointments">{t(locale, "appointments")}</a>}
           {(role === "technician" || role === "admin") && <a href="/technician">{t(locale, "myCases")}</a>}
           {(role === "doctor" || role === "admin") && <a href="/doctor">{t(locale, "myPatients")}</a>}

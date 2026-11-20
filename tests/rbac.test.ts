@@ -226,3 +226,22 @@ describe("production schemas", () => {
     expect(qcSchema.safeParse({ case_id: u, result: "fail", notes: "misaligned" }).success).toBe(true);
   });
 });
+
+import { paymentSchema, expenseSchema, voidInvoiceSchema } from "@/lib/schemas";
+describe("finance schemas", () => {
+  const u = "3f2b8c1e-5d4a-4e6b-9a7c-1d2e3f4a5b6c";
+  it("payment: positive amount, known method", () => {
+    expect(paymentSchema.safeParse({ invoice_id: u, amount: "10", method: "cash", reference: "" }).success).toBe(true);
+    expect(paymentSchema.safeParse({ invoice_id: u, amount: "0", method: "cash", reference: "" }).success).toBe(false);
+    expect(paymentSchema.safeParse({ invoice_id: u, amount: "5", method: "barter", reference: "" }).success).toBe(false);
+  });
+  it("expense: ISO currency, valid date, positive amount", () => {
+    expect(expenseSchema.safeParse({ category: "Materials", description: "", amount: "5", currency: "usd", incurred_on: "2026-11-01" }).success).toBe(true);
+    expect(expenseSchema.safeParse({ category: "Materials", description: "", amount: "5", currency: "US", incurred_on: "2026-11-01" }).success).toBe(false);
+    expect(expenseSchema.safeParse({ category: "M", description: "", amount: "5", currency: "USD", incurred_on: "01/11/2026" }).success).toBe(false);
+  });
+  it("void needs a reason", () => {
+    expect(voidInvoiceSchema.safeParse({ id: u, reason: " " }).success).toBe(false);
+    expect(voidInvoiceSchema.safeParse({ id: u, reason: "mistake" }).success).toBe(true);
+  });
+});

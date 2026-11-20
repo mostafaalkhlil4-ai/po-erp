@@ -4,6 +4,7 @@ import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { Shell } from "@/components/Shell";
 import { ItemForm } from "../ItemForm";
+import { issueInvoice } from "../../finance/actions";
 import { removeItem, setDiscount, submitQuotation, approveQuotation, rejectQuotation, reviseQuotation } from "../actions";
 
 export default async function QuotationPage({ params }: { params: Promise<{ id: string }> }) {
@@ -14,13 +15,15 @@ export default async function QuotationPage({ params }: { params: Promise<{ id: 
   const { data: q } = await supabase.from("quotations")
     .select("id,quotation_no,case_id,revision,status,currency,tax_rate,discount_percent,rejection_reason,snapshot").eq("id", id).maybeSingle();
   if (!q) notFound(); // also the answer for roles without quotation access
-  const [{ data: items }, { data: totals }, { data: prods }, { data: mf }, { data: canDiscount }, { data: canApprove }] = await Promise.all([
+  const [{ data: items }, { data: totals }, { data: prods }, { data: mf }, { data: canDiscount }, { data: canApprove }, { data: canFin }, { data: inv }] = await Promise.all([
     supabase.from("quotation_items").select("id,item_type,description,quantity,unit_price,line_total").eq("quotation_id", id).order("seq"),
     supabase.rpc("quotation_totals", { p_q: id }),
     supabase.from("products").select("id,name,sku,manufacturer_id").eq("is_active", true).order("name"),
     supabase.from("manufacturers").select("id,name"),
     supabase.rpc("has_permission", { p_code: "quotations.discount" }),
     supabase.rpc("has_permission", { p_code: "quotations.approve" }),
+    supabase.rpc("has_permission", { p_code: "finance.manage" }),
+    supabase.from("invoices").select("id,invoice_no").eq("quotation_id", id).maybeSingle(),
   ]);
   const tot = (totals ?? [])[0];
   const mname = new Map((mf ?? []).map((m) => [m.id, m.name]));
@@ -72,6 +75,9 @@ export default async function QuotationPage({ params }: { params: Promise<{ id: 
             <button type="submit">{t(locale, "reject")}</button></form></div>) : <p>{t(locale, "awaitingApproval")}</p>}
         <form action={reviseQuotation} style={{ marginTop: "1rem" }}><input type="hidden" name="id" value={q.id} /><button className="link" type="submit">{t(locale, "revise")}</button></form>
       </div>)}
+      {q.status === "approved" && canFin === true && (inv
+        ? <p style={{ marginTop: "1rem" }}><a href="/management/finance">{t(locale, "invoice")} #{inv.invoice_no}</a></p>
+        : <form action={issueInvoice} style={{ marginTop: "1rem" }}><input type="hidden" name="id" value={q.id} /><button type="submit">{t(locale, "issueInvoice")}</button></form>)}
       {q.status === "rejected" && <form action={reviseQuotation} style={{ marginTop: "1rem" }}><input type="hidden" name="id" value={q.id} /><button type="submit">{t(locale, "revise")}</button></form>}
     </Shell>
   );
