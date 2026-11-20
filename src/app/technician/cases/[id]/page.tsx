@@ -4,6 +4,7 @@ import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { Shell } from "@/components/Shell";
 import { ProductionPanel } from "@/components/ProductionPanel";
+import { CaseExtras } from "@/components/CaseExtras";
 import { addMeasurement, addTechAssessment, techAdvance } from "./actions";
 
 export default async function TechCase({ params }: { params: Promise<{ id: string }> }) {
@@ -34,6 +35,7 @@ export default async function TechCase({ params }: { params: Promise<{ id: strin
             <button type="submit">{t(locale, "moveTo")}</button></form>)}
       </div>
       <ProductionPanel locale={locale} caseId={c.id} caseStatus={c.status} />
+      <CaseExtras locale={locale} caseId={c.id} patientId={c.patient_id} caseStatus={c.status} />
       <div className="card" style={{ marginTop: "1rem" }}>
         <h2>{t(locale, "measurements")}</h2>
         <ul>{(meas ?? []).map((m) => <li key={m.id}>{m.label}: {m.value} {m.unit}{m.side ? ` (${m.side})` : ""}</li>)}</ul>

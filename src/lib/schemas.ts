@@ -151,3 +151,28 @@ export const expenseSchema = z.object({
   incurred_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 export const voidInvoiceSchema = z.object({ id: z.string().uuid(), reason: z.string().trim().min(1).max(1000) });
+
+export const deviceSchema = z.object({
+  case_id: z.string().uuid(), device_type: z.string().trim().min(1).max(200),
+  side: z.enum(["left", "right", "both", ""]).transform((v) => (v === "" ? null : v)),
+  description: z.string().trim().max(2000).transform((v) => (v === "" ? null : v)),
+});
+export const componentSchema = z.object({ device_id: z.string().uuid(), case_id: z.string().uuid(), name: z.string().trim().min(1).max(200), notes: z.string().trim().max(1000).transform((v) => (v === "" ? null : v)) });
+export const followUpSchema = z.object({ case_id: z.string().uuid(), due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) });
+export const followUpUpdateSchema = z.object({
+  id: z.string().uuid(), case_id: z.string().uuid(), status: z.enum(["planned", "done", "cancelled"]),
+  technical_feedback: z.string().trim().max(5000).transform((v) => (v === "" ? null : v)),
+  device_issues: z.string().trim().max(5000).transform((v) => (v === "" ? null : v)),
+});
+export const ATTACHMENT_MIME: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "application/pdf": "pdf" };
+export const MAX_ATTACHMENT_BYTES = 26214400;
+export const attachmentMetaSchema = z.object({
+  patient_id: z.string().uuid(), case_id: z.string().uuid().or(z.literal("").transform(() => null)),
+  category: z.enum(["photo", "document", "design", "report", "other"]), visibility: z.enum(["internal", "shared"]),
+});
+export function checkAttachmentFile(f: { type: string; size: number; name: string }): boolean {
+  return f.type in ATTACHMENT_MIME && f.size > 0 && f.size <= MAX_ATTACHMENT_BYTES && f.name.length > 0 && f.name.length <= 255;
+}
+
+export const referralSchema = z.object({ patient_id: z.string().uuid(), referring_doctor_id: z.string().uuid(), reason: z.string().trim().max(2000).transform((v) => (v === "" ? null : v)) });
+export const referralStatusSchema = z.object({ id: z.string().uuid(), status: z.enum(["received", "accepted", "rejected", "closed"]) });

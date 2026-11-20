@@ -245,3 +245,25 @@ describe("finance schemas", () => {
     expect(voidInvoiceSchema.safeParse({ id: u, reason: "mistake" }).success).toBe(true);
   });
 });
+
+import { deviceSchema, followUpSchema, attachmentMetaSchema, checkAttachmentFile } from "@/lib/schemas";
+describe("device, follow-up and attachment rules", () => {
+  const u = "3f2b8c1e-5d4a-4e6b-9a7c-1d2e3f4a5b6c";
+  it("device needs a type; side is optional", () => {
+    expect(deviceSchema.safeParse({ case_id: u, device_type: "Knee", side: "", description: "" }).success).toBe(true);
+    expect(deviceSchema.safeParse({ case_id: u, device_type: "", side: "", description: "" }).success).toBe(false);
+    expect(deviceSchema.safeParse({ case_id: u, device_type: "x", side: "up", description: "" }).success).toBe(false);
+  });
+  it("follow-up date format", () => {
+    expect(followUpSchema.safeParse({ case_id: u, due_date: "2026-12-01" }).success).toBe(true);
+    expect(followUpSchema.safeParse({ case_id: u, due_date: "tomorrow" }).success).toBe(false);
+  });
+  it("attachment file allowlist and size", () => {
+    expect(checkAttachmentFile({ type: "application/pdf", size: 1000, name: "a.pdf" })).toBe(true);
+    expect(checkAttachmentFile({ type: "image/svg+xml", size: 1000, name: "a.svg" })).toBe(false);
+    expect(checkAttachmentFile({ type: "image/png", size: 26214401, name: "a.png" })).toBe(false);
+    expect(checkAttachmentFile({ type: "image/png", size: 0, name: "a.png" })).toBe(false);
+    expect(attachmentMetaSchema.safeParse({ patient_id: u, case_id: "", category: "photo", visibility: "internal" }).success).toBe(true);
+    expect(attachmentMetaSchema.safeParse({ patient_id: u, case_id: "", category: "exe", visibility: "internal" }).success).toBe(false);
+  });
+});

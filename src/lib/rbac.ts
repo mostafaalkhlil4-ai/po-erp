@@ -11,6 +11,7 @@ export function isAppRole(v: unknown): v is AppRole {
 const ROUTE_ACCESS: Record<string, readonly AppRole[]> = {
   "/dashboard": ROLES,
   "/reset": ROLES,
+  "/files": ROLES, // signed-download endpoint; the attachment row policy decides access
   "/admin": ["admin"],
   "/management": ["admin", "management"],
   "/technician": ["admin", "technician"],
