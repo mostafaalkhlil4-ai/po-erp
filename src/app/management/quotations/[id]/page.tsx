@@ -4,7 +4,7 @@ import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { Shell } from "@/components/Shell";
 import { ItemForm } from "../ItemForm";
-import { issueInvoice } from "../../finance/actions";
+import { issueInvoice, setVisibility } from "../../finance/actions";
 import { removeItem, setDiscount, submitQuotation, approveQuotation, rejectQuotation, reviseQuotation } from "../actions";
 
 export default async function QuotationPage({ params }: { params: Promise<{ id: string }> }) {
@@ -15,7 +15,7 @@ export default async function QuotationPage({ params }: { params: Promise<{ id: 
   const { data: q } = await supabase.from("quotations")
     .select("id,quotation_no,case_id,revision,status,currency,tax_rate,discount_percent,rejection_reason,snapshot").eq("id", id).maybeSingle();
   if (!q) notFound(); // also the answer for roles without quotation access
-  const [{ data: items }, { data: totals }, { data: prods }, { data: mf }, { data: canDiscount }, { data: canApprove }, { data: canFin }, { data: inv }] = await Promise.all([
+  const [{ data: items }, { data: totals }, { data: prods }, { data: mf }, { data: canDiscount }, { data: canApprove }, { data: canFin }, { data: inv }, { data: vis }] = await Promise.all([
     supabase.from("quotation_items").select("id,item_type,description,quantity,unit_price,line_total").eq("quotation_id", id).order("seq"),
     supabase.rpc("quotation_totals", { p_q: id }),
     supabase.from("products").select("id,name,sku,manufacturer_id").eq("is_active", true).order("name"),
@@ -24,6 +24,7 @@ export default async function QuotationPage({ params }: { params: Promise<{ id: 
     supabase.rpc("has_permission", { p_code: "quotations.approve" }),
     supabase.rpc("has_permission", { p_code: "finance.manage" }),
     supabase.from("invoices").select("id,invoice_no").eq("quotation_id", id).maybeSingle(),
+    supabase.rpc("visibility_of", { p_kind: "quotation" }),
   ]);
   const tot = (totals ?? [])[0];
   const mname = new Map((mf ?? []).map((m) => [m.id, m.name]));
@@ -43,6 +44,10 @@ export default async function QuotationPage({ params }: { params: Promise<{ id: 
         <p><a href={`/management/cases/${q.case_id}`}>{t(locale, "cases")}</a></p>
         {q.rejection_reason && <p role="status">{t(locale, "rejectionReason")}: {q.rejection_reason}</p>}
         {q.status === "approved" && <p><a href={`/management/quotations/${q.id}/print`}>{t(locale, "printSave")}</a></p>}
+        {q.status === "approved" && (() => { const on = (vis ?? []).some((v: { ref_id: string; visible: boolean }) => v.ref_id === q.id && v.visible); return (
+          <form action={setVisibility}><input type="hidden" name="kind" value="quotation" /><input type="hidden" name="id" value={q.id} />
+            <input type="hidden" name="visible" value={on ? "false" : "true"} />
+            <p>{on ? t(locale, "sharedWithPatient") : t(locale, "notSharedWithPatient")} <button type="submit">{on ? t(locale, "hideFromPatient") : t(locale, "shareWithPatient")}</button></p></form>); })()}
         {q.status === "approved" && <p role="status">{t(locale, "snapshotFrozen")}{snap?.total != null ? ` — ${snap.total} ${q.currency}` : ""}</p>}
       </div>
       <div className="card" style={{ marginTop: "1rem" }}>

@@ -3,19 +3,21 @@ import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { Shell } from "@/components/Shell";
 import { PaymentForm, ExpenseForm } from "./Forms";
-import { voidInvoice } from "./actions";
+import { voidInvoice, setVisibility } from "./actions";
 
 export default async function FinancePage() {
   const locale = await getLocale();
   const supabase = await createClient();
   const { data: canFin } = await supabase.rpc("has_permission", { p_code: "finance.manage" });
-  const [{ data: invs }, { data: pays }, { data: exps }] = await Promise.all([
+  const [{ data: invs }, { data: pays }, { data: exps }, { data: vis }] = await Promise.all([
     supabase.from("invoices").select("id,invoice_no,patient_id,currency,amount,status,void_reason").order("invoice_no", { ascending: false }),
     supabase.from("payments").select("invoice_id,amount"),
     supabase.from("expenses").select("id,category,description,amount,currency,incurred_on").order("incurred_on", { ascending: false }).limit(50),
+    supabase.rpc("visibility_of", { p_kind: "invoice" }),
   ]);
   const { data: pts } = await supabase.from("patients").select("id,full_name").in("id", [...new Set((invs ?? []).map((i) => i.patient_id))]);
   const pname = new Map((pts ?? []).map((p) => [p.id, p.full_name]));
+  const shared = new Map<string, boolean>((vis ?? []).map((v: { ref_id: string; visible: boolean }) => [v.ref_id, v.visible]));
   const paid = new Map<string, number>();
   for (const p of pays ?? []) paid.set(p.invoice_id, Math.round(((paid.get(p.invoice_id) ?? 0) + Number(p.amount)) * 100) / 100);
   const open = (invs ?? []).filter((i) => i.status === "issued" && Number(i.amount) - (paid.get(i.id) ?? 0) > 0);
@@ -37,6 +39,11 @@ export default async function FinancePage() {
             <tr key={i.id}><td dir="ltr">{i.invoice_no}</td><td>{pname.get(i.patient_id) ?? "—"}</td>
               <td dir="ltr">{i.amount} {i.currency}</td><td dir="ltr">{p}</td><td dir="ltr">{(Math.round((Number(i.amount) - p) * 100) / 100)}</td>
               <td>{i.status === "void" ? `${t(locale, "void")}: ${i.void_reason}` : t(locale, "issued")}
+                {i.status === "issued" && (
+                  <form action={setVisibility} style={{ display: "inline", marginInlineStart: ".5rem" }}>
+                    <input type="hidden" name="kind" value="invoice" /><input type="hidden" name="id" value={i.id} />
+                    <input type="hidden" name="visible" value={shared.get(i.id) ? "false" : "true"} />
+                    <button className="link" type="submit">{shared.get(i.id) ? t(locale, "hideFromPatient") : t(locale, "shareWithPatient")}</button></form>)}
                 {i.status === "issued" && p === 0 && (
                   <form action={voidInvoice} style={{ display: "inline-flex", gap: ".25rem", marginInlineStart: ".5rem" }}>
                     <input type="hidden" name="id" value={i.id} />

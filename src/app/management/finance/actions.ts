@@ -36,3 +36,13 @@ export async function voidInvoice(form: FormData): Promise<void> {
   if (error) console.error("voidInvoice", error.code);
   revalidatePath("/management/finance");
 }
+
+import { visibilitySchema } from "@/lib/schemas";
+// Staff decide manually what the patient sees (D-029 amended, migration 0013).
+export async function setVisibility(form: FormData): Promise<void> {
+  const r = visibilitySchema.safeParse(formObject(form, ["kind", "id", "visible"]));
+  if (!r.success) return;
+  const { error } = await (await createClient()).rpc("set_patient_visibility", { p_kind: r.data.kind, p_ref: r.data.id, p_visible: r.data.visible });
+  if (error) console.error("setVisibility", error.code);
+  revalidatePath("/management/finance"); revalidatePath(`/management/quotations/${r.data.id}`);
+}

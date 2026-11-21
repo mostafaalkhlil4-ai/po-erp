@@ -190,3 +190,5 @@ export const supplierSchema = z.object({ name: z.string().trim().min(1).max(200)
 export const poSchema = z.object({ supplier_id: z.string().uuid(), currency: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/) });
 export const poItemSchema = z.object({ po_id: z.string().uuid(), item_id: z.string().uuid(), quantity: qty, unit_cost: z.coerce.number().min(0).max(999999999999) });
 export const poStatusSchema = z.object({ id: z.string().uuid(), to: z.enum(["ordered", "received", "cancelled"]) });
+
+export const visibilitySchema = z.object({ kind: z.enum(["quotation", "invoice"]), id: z.string().uuid(), visible: z.enum(["true", "false"]).transform((v) => v === "true") });

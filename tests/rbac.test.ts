@@ -286,3 +286,14 @@ describe("inventory and procurement schemas", () => {
     expect(poItemSchema.safeParse({ po_id: u, item_id: u, quantity: "1", unit_cost: "-1" }).success).toBe(false);
   });
 });
+
+import { visibilitySchema } from "@/lib/schemas";
+describe("patient visibility schema", () => {
+  const u = "3f2b8c1e-5d4a-4e6b-9a7c-1d2e3f4a5b6c";
+  it("kind and flag are strict", () => {
+    expect(visibilitySchema.parse({ kind: "invoice", id: u, visible: "true" }).visible).toBe(true);
+    expect(visibilitySchema.parse({ kind: "quotation", id: u, visible: "false" }).visible).toBe(false);
+    expect(visibilitySchema.safeParse({ kind: "payment", id: u, visible: "true" }).success).toBe(false);
+    expect(visibilitySchema.safeParse({ kind: "invoice", id: u, visible: "yes" }).success).toBe(false);
+  });
+});
