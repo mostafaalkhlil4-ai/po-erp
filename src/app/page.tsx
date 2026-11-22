@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getLocale } from "@/lib/locale";
 import { t } from "@/lib/i18n";
 import { LocaleSwitch } from "@/components/LocaleSwitch";
-import { isBackendConfigured } from "@/lib/env";
+import { isBackendConfigured, backendProblems } from "@/lib/env";
 
 // Public landing page. No invented company or service claims: only the product name and the approved manufacturer list (D-002).
 export default async function Home() {
@@ -18,7 +18,7 @@ export default async function Home() {
           <p>{t(locale, "landingTagline")}</p>
           {configured
             ? <p><a className="btn" href={user ? "/dashboard" : "/login"}>{user ? t(locale, "dashboard") : t(locale, "signIn")}</a></p>
-            : <p role="status">{t(locale, "backendNotConfigured")}</p>}
+            : <p role="status">{t(locale, "backendNotConfigured")} <code dir="ltr">{backendProblems().join(", ")}</code></p>}
           <h2>{t(locale, "approvedManufacturers")}</h2>
           <ul><li>Össur</li><li>Ottobock</li><li>PROTEOR</li></ul>
         </div>

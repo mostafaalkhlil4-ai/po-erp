@@ -10,3 +10,12 @@ describe("isBackendConfigured", () => {
     expect(isBackendConfigured({ NEXT_PUBLIC_SUPABASE_URL: "not a url", NEXT_PUBLIC_SUPABASE_ANON_KEY: "k" })).toBe(false);
   });
 });
+
+import { backendProblems } from "@/lib/env";
+describe("backendProblems", () => {
+  it("names only the missing settings, never values", () => {
+    expect(backendProblems({})).toEqual(["NEXT_PUBLIC_SUPABASE_ANON_KEY", "NEXT_PUBLIC_SUPABASE_URL"]);
+    expect(backendProblems({ NEXT_PUBLIC_SUPABASE_URL: "https://a.supabase.co" })).toEqual(["NEXT_PUBLIC_SUPABASE_ANON_KEY"]);
+    expect(backendProblems({ NEXT_PUBLIC_SUPABASE_URL: "https://a.supabase.co", NEXT_PUBLIC_SUPABASE_ANON_KEY: "k" })).toEqual([]);
+  });
+});
