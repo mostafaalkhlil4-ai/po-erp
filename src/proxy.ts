@@ -2,13 +2,15 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { canAccessPath, isAppRole, isPublicPath } from "@/lib/rbac";
 import { isBackendConfigured } from "@/lib/env";
+import { isDemoEnabled, isDemoPath } from "@/lib/demo";
 
 // Session refresh + UX-level route guard. Authorization of DATA is enforced by RLS.
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   const { pathname } = request.nextUrl;
   if (!isBackendConfigured()) {
-    return ["/", "/login"].includes(pathname) ? response : NextResponse.redirect(new URL("/", request.url));
+    const open = ["/", "/login"].includes(pathname) || (isDemoEnabled() && isDemoPath(pathname));
+    return open ? response : NextResponse.redirect(new URL("/", request.url));
   }
 
   const supabase = createServerClient(
