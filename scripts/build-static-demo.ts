@@ -11,11 +11,10 @@ const data = Object.fromEntries(ROLES.map((r) => [r, { sections: DEMO_SECTIONS[r
 
 const html = `<!doctype html>
 <html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>نظام الأطراف الاصطناعية والتقويم — عرض تجريبي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Noto+Kufi+Arabic:wght@700;800&family=Noto+Sans+Arabic:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;800&display=swap"><title>نظام الأطراف الاصطناعية والتقويم — عرض تجريبي</title>
 <style>${css}
-table{border-collapse:collapse;width:100%}th,td{text-align:start;padding:.5rem;border-bottom:1px solid #e2e8f0}
 main{max-width:56rem;margin:1.5rem auto;padding:0 1rem}section.card{margin-bottom:1rem}ul.roles{list-style:none;padding:0;display:flex;gap:.5rem;flex-wrap:wrap}
-button.lang{background:transparent;color:#fff;text-decoration:underline;padding:0}</style></head>
+button.lang{background:transparent;color:#fff;text-decoration:underline;padding:0;min-height:0}</style></head>
 <body><header class="bar"><strong id="title"></strong><button class="lang" id="lang" type="button"></button></header>
 <main><p role="status" id="note"></p><div id="app"></div></main>
 <script>

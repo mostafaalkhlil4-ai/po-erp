@@ -46,7 +46,7 @@ export async function CaseExtras({ locale, caseId, patientId, caseStatus }: { lo
     {(afterDelivery || (fus ?? []).length > 0) && <div className="card" style={{ marginTop: "1rem" }}>
       <h2>{t(locale, "followUps")}</h2>
       {(fus ?? []).map((f) => (
-        <form key={f.id} action={updateFollowUp} style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: ".5rem", marginBottom: ".5rem" }}>
+        <form key={f.id} action={updateFollowUp} style={{ borderBottom: "1px solid var(--border-hairline)", paddingBottom: ".5rem", marginBottom: ".5rem" }}>
           <input type="hidden" name="id" value={f.id} /><input type="hidden" name="case_id" value={caseId} />
           <p><span dir="ltr">{f.due_date}</span> — {t(locale, `fu_${f.status}` as never)}</p>
           {mayAct ? (<>
