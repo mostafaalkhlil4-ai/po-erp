@@ -1,5 +1,13 @@
-# Minimal Supabase CLI config so the Supabase <-> GitHub integration can find migrations.
+# Supabase CLI config. `npx supabase start` (needs Docker) runs a LOCAL stack and applies supabase/migrations.
 project_id = "po-erp"
 
 [db]
 major_version = 15
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/callback", "http://localhost:3000/reset"]
+enable_signup = true
+
+[auth.email]
+enable_confirmations = false

@@ -8,7 +8,9 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:db": "bash scripts/test-db.sh"
+    "test:db": "bash scripts/test-db.sh",
+    "local:up": "bash scripts/local-up.sh",
+    "local:admin": "bash scripts/local-admin.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
