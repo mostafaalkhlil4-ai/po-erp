@@ -18,7 +18,7 @@ begin
 
   -- ---- catalog ----
   perform tests.eq('T70a exactly the three approved manufacturers',
-    (select string_agg(name, ',' order by name) from public.manufacturers), 'Ottobock,PROTEOR,Össur');
+    (select string_agg(name, ',' order by name collate "C") from public.manufacturers), 'Ottobock,PROTEOR,Össur');
   perform tests.eq('T70b migration seeded no products', (select count(*) from public.products)::int, 0);
   perform tests.login(mgmt);
   perform tests.expect_error('T70c nobody can add manufacturers via the API',
