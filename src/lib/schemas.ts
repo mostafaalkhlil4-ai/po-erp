@@ -192,3 +192,12 @@ export const poItemSchema = z.object({ po_id: z.string().uuid(), item_id: z.stri
 export const poStatusSchema = z.object({ id: z.string().uuid(), to: z.enum(["ordered", "received", "cancelled"]) });
 
 export const visibilitySchema = z.object({ kind: z.enum(["quotation", "invoice"]), id: z.string().uuid(), visible: z.enum(["true", "false"]).transform((v) => v === "true") });
+
+// General-manager settings (D-036): all optional text, trimmed; empty string means "not set".
+const optText = (max: number) => z.string().trim().max(max).transform((v) => (v === "" ? null : v));
+export const orgSettingsSchema = z.object({
+  center_name: optText(200),
+  phone: optText(50),
+  email: z.string().trim().max(200).transform((v) => (v === "" ? null : v)).pipe(z.string().email().nullable()),
+  address: optText(500),
+});

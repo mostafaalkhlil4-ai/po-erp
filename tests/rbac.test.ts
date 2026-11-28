@@ -297,3 +297,15 @@ describe("patient visibility schema", () => {
     expect(visibilitySchema.safeParse({ kind: "invoice", id: u, visible: "yes" }).success).toBe(false);
   });
 });
+
+import { orgSettingsSchema } from "@/lib/schemas";
+describe("orgSettingsSchema", () => {
+  it("accepts empty optional fields as null and trims", () => {
+    expect(orgSettingsSchema.parse({ center_name: "  Demo  ", phone: "", email: "", address: "" }))
+      .toEqual({ center_name: "Demo", phone: null, email: null, address: null });
+  });
+  it("rejects bad e-mail and over-long values", () => {
+    expect(orgSettingsSchema.safeParse({ center_name: "", phone: "", email: "nope", address: "" }).success).toBe(false);
+    expect(orgSettingsSchema.safeParse({ center_name: "x".repeat(201), phone: "", email: "", address: "" }).success).toBe(false);
+  });
+});
